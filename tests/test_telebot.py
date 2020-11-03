@@ -428,8 +428,9 @@ class TestTeleBot:
         shipping_query = None
         pre_checkout_query = None
         poll = None
+        poll_answer = None
         return types.Update(-1001234038283, message, edited_message, channel_post, edited_channel_post, inline_query,
-                   chosen_inline_result, callback_query, shipping_query, pre_checkout_query, poll)
+                            chosen_inline_result, callback_query, shipping_query, pre_checkout_query, poll, poll_answer)
 
     def test_is_string_unicode(self):
         s1 = u'string'
@@ -552,3 +553,9 @@ class TestTeleBot:
         tb.process_new_updates([update])
         time.sleep(1)
         assert update.message.text == 'got' * 2
+
+    def test_chat_permissions(self):
+        return # CHAT_ID is private chat, no permissions can be set
+        tb = telebot.TeleBot(TOKEN)
+        permissions = types.ChatPermissions(can_send_messages=True, can_send_polls=False)
+        msg = tb.set_chat_permissions(CHAT_ID, permissions)

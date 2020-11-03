@@ -2,22 +2,20 @@
 import random
 import re
 import string
-import sys
 import threading
 import traceback
 import warnings
 import functools
 
-import six
-from six import string_types
-
-# Python3 queue support.
+import queue as Queue
+import logging
 
 try:
-    import Queue
-except ImportError:
-    import queue as Queue
-import logging
+    from PIL import Image
+    from io import BytesIO
+    pil_imported = True
+except:
+    pil_imported = False
 
 logger = logging.getLogger('TeleBot')
 
@@ -25,67 +23,67 @@ thread_local = threading.local()
 
 
 class WorkerThread(threading.Thread):
-        count = 0
+    count = 0
 
-        def __init__(self, exception_callback=None, queue=None, name=None):
-            if not name:
-                name = "WorkerThread{0}".format(self.__class__.count + 1)
-                self.__class__.count += 1
-            if not queue:
-                queue = Queue.Queue()
+    def __init__(self, exception_callback=None, queue=None, name=None):
+        if not name:
+            name = "WorkerThread{0}".format(self.__class__.count + 1)
+            self.__class__.count += 1
+        if not queue:
+            queue = Queue.Queue()
 
-            threading.Thread.__init__(self, name=name)
-            self.queue = queue
-            self.daemon = True
+        threading.Thread.__init__(self, name=name)
+        self.queue = queue
+        self.daemon = True
 
-            self.received_task_event = threading.Event()
-            self.done_event = threading.Event()
-            self.exception_event = threading.Event()
-            self.continue_event = threading.Event()
+        self.received_task_event = threading.Event()
+        self.done_event = threading.Event()
+        self.exception_event = threading.Event()
+        self.continue_event = threading.Event()
 
-            self.exception_callback = exception_callback
-            self.exc_info = None
-            self._running = True
-            self.start()
+        self.exception_callback = exception_callback
+        self.exception_info = None
+        self._running = True
+        self.start()
 
-        def run(self):
-            while self._running:
-                try:
-                    task, args, kwargs = self.queue.get(block=True, timeout=.5)
-                    self.continue_event.clear()
-                    self.received_task_event.clear()
-                    self.done_event.clear()
-                    self.exception_event.clear()
-                    logger.debug("Received task")
-                    self.received_task_event.set()
+    def run(self):
+        while self._running:
+            try:
+                task, args, kwargs = self.queue.get(block=True, timeout=.5)
+                self.continue_event.clear()
+                self.received_task_event.clear()
+                self.done_event.clear()
+                self.exception_event.clear()
+                logger.debug("Received task")
+                self.received_task_event.set()
 
-                    task(*args, **kwargs)
-                    logger.debug("Task complete")
-                    self.done_event.set()
-                except Queue.Empty:
-                    pass
-                except Exception as e:
-                    logger.error(type(e).__name__ + " occurred, args=" + str(e.args) + "\n" + traceback.format_exc())
-                    self.exc_info = sys.exc_info()
-                    self.exception_event.set()
+                task(*args, **kwargs)
+                logger.debug("Task complete")
+                self.done_event.set()
+            except Queue.Empty:
+                pass
+            except Exception as e:
+                logger.error(type(e).__name__ + " occurred, args=" + str(e.args) + "\n" + traceback.format_exc())
+                self.exception_info = e
+                self.exception_event.set()
 
-                    if self.exception_callback:
-                        self.exception_callback(self, self.exc_info)
-                    self.continue_event.wait()
+                if self.exception_callback:
+                    self.exception_callback(self, self.exception_info)
+                self.continue_event.wait()
 
-        def put(self, task, *args, **kwargs):
-            self.queue.put((task, args, kwargs))
+    def put(self, task, *args, **kwargs):
+        self.queue.put((task, args, kwargs))
 
-        def raise_exceptions(self):
-            if self.exception_event.is_set():
-                six.reraise(self.exc_info[0], self.exc_info[1], self.exc_info[2])
+    def raise_exceptions(self):
+        if self.exception_event.is_set():
+            raise self.exception_info
 
-        def clear_exceptions(self):
-            self.exception_event.clear()
-            self.continue_event.set()
+    def clear_exceptions(self):
+        self.exception_event.clear()
+        self.continue_event.set()
 
-        def stop(self):
-            self._running = False
+    def stop(self):
+        self._running = False
 
 
 class ThreadPool:
@@ -96,19 +94,19 @@ class ThreadPool:
         self.num_threads = num_threads
 
         self.exception_event = threading.Event()
-        self.exc_info = None
+        self.exception_info = None
 
     def put(self, func, *args, **kwargs):
         self.tasks.put((func, args, kwargs))
 
     def on_exception(self, worker_thread, exc_info):
-        self.exc_info = exc_info
+        self.exception_info = exc_info
         self.exception_event.set()
         worker_thread.continue_event.set()
 
     def raise_exceptions(self):
         if self.exception_event.is_set():
-            six.reraise(self.exc_info[0], self.exc_info[1], self.exc_info[2])
+            raise self.exception_info
 
     def clear_exceptions(self):
         self.exception_event.clear()
@@ -133,15 +131,15 @@ class AsyncTask:
     def _run(self):
         try:
             self.result = self.target(*self.args, **self.kwargs)
-        except:
-            self.result = sys.exc_info()
+        except Exception as e:
+            self.result = e
         self.done = True
 
     def wait(self):
         if not self.done:
             self.thread.join()
         if isinstance(self.result, BaseException):
-            six.reraise(self.result[0], self.result[1], self.result[2])
+            raise self.result
         else:
             return self.result
 
@@ -157,7 +155,26 @@ def async_dec():
 
 
 def is_string(var):
-    return isinstance(var, string_types)
+    return isinstance(var, str)
+
+def is_dict(var):
+    return isinstance(var, dict)
+
+def is_bytes(var):
+    return isinstance(var, bytes)
+
+def is_pil_image(var):
+    return pil_imported and isinstance(var, Image.Image)
+
+def pil_image_to_file(image, extension='JPEG', quality='web_low'):
+    if pil_imported:
+        photoBuffer = BytesIO()
+        image.convert('RGB').save(photoBuffer, extension, quality=quality)
+        photoBuffer.seek(0)
+        
+        return photoBuffer
+    else:
+        raise RuntimeError('PIL module is not imported')
 
 def is_command(text):
     """
@@ -165,6 +182,7 @@ def is_command(text):
     :param text: Text to check.
     :return: True if `text` is a command, else False.
     """
+    if (text is None): return None
     return text.startswith('/')
 
 
@@ -182,6 +200,7 @@ def extract_command(text):
     :param text: String to extract the command from
     :return: the command if `text` is a command (according to is_command), else None.
     """
+    if (text is None): return None
     return text.split()[0].split('@')[0][1:] if is_command(text) else None
 
 
@@ -258,6 +277,11 @@ def per_thread(key, construct_value, reset=False):
 
     return getattr(thread_local, key)
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    # https://stackoverflow.com/a/312464/9935473
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
 def generate_random_token():
     return ''.join(random.sample(string.ascii_letters, 16))

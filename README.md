@@ -5,6 +5,7 @@
 [![PyPi Package Version](https://img.shields.io/pypi/v/pyTelegramBotAPI.svg)](https://pypi.python.org/pypi/pyTelegramBotAPI)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/pyTelegramBotAPI.svg)](https://pypi.python.org/pypi/pyTelegramBotAPI)
 [![Build Status](https://travis-ci.org/eternnoir/pyTelegramBotAPI.svg?branch=master)](https://travis-ci.org/eternnoir/pyTelegramBotAPI)
+[![PyPi downloads](https://img.shields.io/pypi/dm/pyTelegramBotAPI.svg)](https://pypi.org/project/pyTelegramBotAPI/)
 
   * [Getting started.](#getting-started)
   * [Writing your first bot](#writing-your-first-bot)
@@ -39,7 +40,7 @@
 
 ## Getting started.
 
-This API is tested with Python 2.6, Python 2.7, Python 3.4, Pypy and Pypy 3.
+This API is tested with Python Python 3.6-3.8 and Pypy 3.
 There are two ways to install the library:
 
 * Installation using pip (a Python package manager)*:
@@ -75,7 +76,7 @@ Then, open the file and create an instance of the TeleBot class.
 ```python
 import telebot
 
-bot = telebot.TeleBot("TOKEN")
+bot = telebot.TeleBot("TOKEN", parse_mode=None) # You can set parse_mode by default. HTML or MARKDOWN
 ```
 *Note: Make sure to actually replace TOKEN with your own API token.*
 
@@ -207,15 +208,15 @@ def send_something(message):
 
 #### Edited Message handlers
 
-Same as Message handlers
+@bot.edited_message_handler(filters)
 
 #### channel_post_handler
 
-Same as Message handlers
+@bot.channel_post_handler(filters)
 
 #### edited_channel_post_handler
 
-Same as Message handlers
+@bot.edited_channel_post_handler(filters)
 
 #### Callback Query Handler
 
@@ -504,7 +505,7 @@ bot.polling()
 ### Using web hooks
 When using webhooks telegram sends one Update per call, for processing it you should call process_new_messages([update.message]) when you recieve it.
 
-There are some examples using webhooks in the *examples/webhook_examples* directory.
+There are some examples using webhooks in the [examples/webhook_examples](examples/webhook_examples) directory.
 
 ### Logging
 
@@ -539,8 +540,13 @@ apihelper.proxy = {'https':'socks5://userproxy:password@proxy_address:port'}
 
 _Checking is in progress..._
 
-✅ [Bot API 3.5](https://core.telegram.org/bots/api-changelog#november-17-2017) _- To be checked..._
+✅ [Bot API 4.3](https://core.telegram.org/bots/api-changelog#may-31-2019) _- To be checked..._
 
+* ✔ [Bot API 4.2](https://core.telegram.org/bots/api-changelog#april-14-2019)
+* ➕ [Bot API 4.1](https://core.telegram.org/bots/api-changelog#august-27-2018) - No Passport support.
+* ➕ [Bot API 4.0](https://core.telegram.org/bots/api-changelog#july-26-2018) - No Passport support.
+* ✔ [Bot API 3.6](https://core.telegram.org/bots/api-changelog#february-13-2018)
+* ✔ [Bot API 3.5](https://core.telegram.org/bots/api-changelog#november-17-2017)
 * ✔ [Bot API 3.4](https://core.telegram.org/bots/api-changelog#october-11-2017)
 * ✔ [Bot API 3.3](https://core.telegram.org/bots/api-changelog#august-23-2017)
 * ✔ [Bot API 3.2](https://core.telegram.org/bots/api-changelog#july-21-2017)
@@ -648,5 +654,16 @@ Get help. Discuss. Chat.
 * [AsadovBot](https://t.me/asadov_bot) ([source](https://github.com/desexcile/BotApi)) by @DesExcile - Сatalog of poems by Eduard Asadov.
 * [thesaurus_com_bot](https://t.me/thesaurus_com_bot) ([source](https://github.com/LeoSvalov/words-i-learn-bot)) by @LeoSvalov - words and synonyms from [dictionary.com](https://www.dictionary.com) and [thesaurus.com](https://www.thesaurus.com) in the telegram.
 * [InfoBot](https://t.me/info2019_bot) ([source](https://github.com/irevenko/info-bot)) by @irevenko - An all-round bot that displays some statistics (weather, time, crypto etc...)
+* [FoodBot](https://t.me/ChensonUz_bot) ([source](https://github.com/Fliego/old_restaurant_telegram_chatbot)) by @Fliego - a simple bot for food ordering
+* [Sporty](https://t.me/SportydBot) ([source](https://github.com/0xnu/sporty)) by @0xnu - Telegram bot for displaying the latest news, sports schedules and injury updates.
+* [Neural style transfer](https://t.me/ebanyivolshebnikBot) ([source](https://github.com/timbyxty/StyleTransfer-tgbot)) by @timbyxty - bot for transferring style from one picture to another based on neural network.
+* [JoinGroup Silencer Bot](https://t.me/joingroup_silencer_bot) ([source](https://github.com/zeph1997/Telegram-Group-Silencer-Bot)) by [@zeph1997](https://github.com/zeph1997) - A Telegram Bot to remove "join group" and "removed from group" notifications.
+* [AdviceBook](https://t.me/adviceokbot) by [@barbax7](https://github.com/barbax7) - A Telegram Bot that allows you to receive random reading tips when you don't know which book to read.
+* [Blue_CC_Bot](https://t.me/Blue_CC_Bot) by [@Akash](https://github.com/BLUE-DEVIL1134) - A Telegram Bot Which Checks Your Given Credit Cards And Says Which Is A Real,Card And Which Is Fake.
+* [RandomInfoBot](https://t.me/RandomInfoBot) by [@Akash](https://github.com/BLUE-DEVIL1134) - A Telegram Bot Which Generates Random Information Of Humans Scraped From Over 13 Websites.
+* [TasksListsBot](https://t.me/TasksListsBot) ([source](https://github.com/Pablo-Davila/TasksListsBot)) by [@Pablo-Davila](https://github.com/Pablo-Davila) - A (tasks) lists manager bot for Telegram.
+* [MyElizaPsychologistBot](https://t.me/TasksListsBot) ([source](https://github.com/Pablo-Davila/MyElizaPsychologistBot)) by [@Pablo-Davila](https://github.com/Pablo-Davila) - An implementation of the famous Eliza psychologist chatbot.
+* [Evdembot](https://t.me/Evdembot) by Adem Kavak. A bot that informs you about everything you want.
+* [Frcstbot](https://t.me/frcstbot) ([source](https://github.com/Mrsqd/frcstbot_public)) by [Mrsqd](https://github.com/Mrsqd). A Telegram bot that will always be happy to show you the weather forecast.
 
 Want to have your bot listed here? Send a Telegram message to @eternnoir or @pevdh.
